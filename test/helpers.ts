@@ -1,4 +1,4 @@
-import {Blockchain} from '@vaulta/vert'
+import {Blockchain} from '@greymass/vert'
 import {Asset, Name, TimePointSec} from '@wharfkit/antelope'
 
 import * as TokenContract from '../codegen/token.ts'
@@ -94,6 +94,9 @@ export async function resetContracts() {
     // Set base configuration for testing
     await setRegistryConfig()
     await setTokensConfig()
+
+    // The registry never pays for balance rows, so accounts must open one before depositing
+    await contracts.registry.actions.openbalance([alice]).send(alice)
 }
 
 export function advanceTime(seconds: number) {

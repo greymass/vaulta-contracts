@@ -34,14 +34,8 @@ void registry::add_balance(const name& account, const asset& quantity)
 {
    balance_table balances(get_self(), get_self().value);
    auto          balance_itr = balances.find(account.value);
-   if (balance_itr != balances.end()) {
-      balances.modify(balance_itr, same_payer, [&](auto& b) { b.balance += quantity; });
-   } else {
-      balances.emplace(account, [&](auto& b) {
-         b.account = account;
-         b.balance = quantity;
-      });
-   }
+   check(balance_itr != balances.end(), "no balance for account, call openbalance first");
+   balances.modify(balance_itr, same_payer, [&](auto& b) { b.balance += quantity; });
 }
 
 void registry::add_token(const symbol_code& ticker, const uint8_t& precision, const name& creator, const name& rampayer)

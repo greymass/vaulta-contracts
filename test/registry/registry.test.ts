@@ -95,6 +95,15 @@ describe(`contract: ${registryContract}`, () => {
                             .send(alice)
                     ).rejects.toThrow('eosio_assert: Incorrect token symbol for deposit.')
                 })
+                test('reject deposit without an open balance', async () => {
+                    await expect(
+                        contracts.token.actions
+                            .transfer([bob, registryContract, '5.0000 A', ''])
+                            .send(bob)
+                    ).rejects.toThrow(
+                        'eosio_assert: no balance for account, call openbalance first'
+                    )
+                })
             })
         })
         describe('action: withdraw', () => {
@@ -155,7 +164,7 @@ describe(`contract: ${registryContract}`, () => {
                 })
                 test('no contract balance', async () => {
                     await expect(
-                        contracts.registry.actions.withdraw([alice, '100.0000 A']).send(alice)
+                        contracts.registry.actions.withdraw([bob, '100.0000 A']).send(bob)
                     ).rejects.toThrow('eosio_assert: no contract balance for account')
                 })
                 test('insufficient contract balance', async () => {

@@ -1,10 +1,11 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "dependencies": {
+        "@greymass/vert": "^3.0.0",
         "@vaulta/bolt": "^2.0.0",
-        "@vaulta/vert": "^2.1.1",
         "@wharfkit/antelope": "^1.1.1",
         "@wharfkit/cli": "^2.11.0",
         "@wharfkit/contract": "^1.1.5",
@@ -38,6 +39,8 @@
     "@ethereumjs/util": ["@ethereumjs/util@8.1.0", "", { "dependencies": { "@ethereumjs/rlp": "^4.0.1", "ethereum-cryptography": "^2.0.0", "micro-ftch": "^0.3.1" } }, "sha512-zQ0IqbdX8FZ9aw11vP+dZkKDkS+kgIvQPHnSAXzP9pLu+Rfu3D3XEeLbicvoXJTYnhZiPmsZUxgdzXwNKxRPbA=="],
 
     "@greymass/eosio": ["@greymass/eosio@0.5.5", "", { "dependencies": { "bn.js": "^4.11.9", "brorand": "^1.1.0", "elliptic": "^6.5.4", "hash.js": "^1.0.0", "tslib": "^2.0.3" } }, "sha512-3SpIjECqdubf3ovrd+K6jvX9AG/wqW2zmFlb6gRlVCLxPSw09Vy/nNBLxLN1E4c2558T8LIYa3/kxteBluC3Zg=="],
+
+    "@greymass/vert": ["@greymass/vert@3.0.0", "", { "dependencies": { "@ethereumjs/util": "^8.0.0-beta.1", "@wharfkit/antelope": "^1.1.1", "bn.js": "^5.2.0", "brorand": "^1.1.0", "chai": "^4.3.6", "colors": "^1.4.0", "cross-fetch": "^3.1.5", "elliptic": "^6.5.4", "hash.js": "^1.1.7", "js-sha3": "^0.8.0", "json-diff": "^0.9.0", "json-diff-ts": "^1.2.4", "lodash": "^4.17.21", "loglevel": "^1.8.0", "loglevel-plugin-prefix": "^0.8.4", "rustbn.js": "^0.2.0", "sorted-btree": "^1.6.0" } }, "sha512-ChSjkFwa0Jn+mzV10D5f51uX4dpzQY8O1m+rFpN+HIMPyUVTtzeF1f4geqnlk5Jj+qy1XUCgyMul2sMwGQdarw=="],
 
     "@humanwhocodes/config-array": ["@humanwhocodes/config-array@0.13.0", "", { "dependencies": { "@humanwhocodes/object-schema": "^2.0.3", "debug": "^4.3.1", "minimatch": "^3.0.5" } }, "sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw=="],
 
@@ -93,7 +96,7 @@
 
     "@vaulta/bolt": ["@vaulta/bolt@2.0.0", "", { "dependencies": { "@vaulta/vert": "^1.2.3", "@wharfkit/contract": "^1.2.1", "@wharfkit/session": "^1.6.0", "@wharfkit/transact-plugin-resource-provider": "^1.1.2", "@wharfkit/wallet-plugin-privatekey": "^1.1.0", "axios": "^1.11.0", "commander": "^14.0.0", "dotenv": "^16.6.1", "figlet": "^1.7.0", "glob": "^10.4.5", "mocha": "^10.2.0", "ws": "^8.16.0" }, "bin": { "bolt": "src/index.js" } }, "sha512-4s2s3qfvbTaof8yfKDJ+f5fUV4PsIpUqmvEzJY5WRn3TXM/Wdgg67xWMRbaJvbxXs0MbhhqY2ZQo/HtTi3hBMA=="],
 
-    "@vaulta/vert": ["@vaulta/vert@2.1.1", "", { "dependencies": { "@ethereumjs/util": "^8.0.0-beta.1", "@wharfkit/antelope": "^1.1.1", "bn.js": "^5.2.0", "brorand": "^1.1.0", "chai": "^4.3.6", "colors": "^1.4.0", "cross-fetch": "^3.1.5", "elliptic": "^6.5.4", "hash.js": "^1.1.7", "js-sha3": "^0.8.0", "json-diff": "^0.9.0", "json-diff-ts": "^1.2.4", "lodash": "^4.17.21", "loglevel": "^1.8.0", "loglevel-plugin-prefix": "^0.8.4", "rustbn.js": "^0.2.0", "sorted-btree": "^1.6.0" } }, "sha512-w/SZXrrDSOqsZUIE2rZMwMYXGFTNhnOMW9IDDYGPiNd3GQ3x/IKHdDtVJytglL9spPFLZRRYNyjZBtV1DVH6Yg=="],
+    "@vaulta/vert": ["@vaulta/vert@1.2.3", "", { "dependencies": { "@ethereumjs/util": "^8.0.0-beta.1", "@greymass/eosio": "^0.5.5", "bn.js": "^5.2.0", "brorand": "^1.1.0", "chai": "^4.3.6", "colors": "^1.4.0", "cross-fetch": "^3.1.5", "elliptic": "^6.5.4", "hash.js": "^1.1.7", "js-sha3": "^0.8.0", "json-diff": "^0.9.0", "json-diff-ts": "^1.2.4", "lodash": "^4.17.21", "loglevel": "^1.8.0", "loglevel-plugin-prefix": "^0.8.4", "rustbn.js": "^0.2.0", "sorted-btree": "^1.6.0" } }, "sha512-7Ly9lqX2L5rHgmNvam6kI0iHmj/vDHgRjtinzEPUdHM6JNkFgs4Xc7WChM4DSOmV6RKGJJ09vaT3sFhPP2gNqQ=="],
 
     "@wharfkit/abicache": ["@wharfkit/abicache@1.2.2", "", { "dependencies": { "@wharfkit/antelope": "^1.0.2", "@wharfkit/signing-request": "^3.1.0", "pako": "^2.0.4", "tslib": "^2.1.0" } }, "sha512-yOsYz2qQpQy7Nb8XZj62pZqp8YnmWDqFlrenYksBb9jl+1aWIpFhWd+14VEez4tUAezRH4UWW+w1SX5vhmUY9A=="],
 
@@ -612,8 +615,6 @@
     "@typescript-eslint/utils/@typescript-eslint/typescript-estree": ["@typescript-eslint/typescript-estree@7.18.0", "", { "dependencies": { "@typescript-eslint/types": "7.18.0", "@typescript-eslint/visitor-keys": "7.18.0", "debug": "^4.3.4", "globby": "^11.1.0", "is-glob": "^4.0.3", "minimatch": "^9.0.4", "semver": "^7.6.0", "ts-api-utils": "^1.3.0" } }, "sha512-aP1v/BSPnnyhMHts8cf1qQ6Q1IFwwRvAQGRvBFkWlo3/lH29OXA3Pts+c10nxRxIBrDnoMqzhgdwVe5f2D6OzA=="],
 
     "@typescript-eslint/visitor-keys/@typescript-eslint/types": ["@typescript-eslint/types@7.18.0", "", {}, "sha512-iZqi+Ds1y4EDYUtlOOC+aUmxnE9xS/yCigkjA7XpTKV6nCBd3Hp/PRGGmdwnfkV2ThMyYldP1wRpm/id99spTQ=="],
-
-    "@vaulta/bolt/@vaulta/vert": ["@vaulta/vert@1.2.3", "", { "dependencies": { "@ethereumjs/util": "^8.0.0-beta.1", "@greymass/eosio": "^0.5.5", "bn.js": "^5.2.0", "brorand": "^1.1.0", "chai": "^4.3.6", "colors": "^1.4.0", "cross-fetch": "^3.1.5", "elliptic": "^6.5.4", "hash.js": "^1.1.7", "js-sha3": "^0.8.0", "json-diff": "^0.9.0", "json-diff-ts": "^1.2.4", "lodash": "^4.17.21", "loglevel": "^1.8.0", "loglevel-plugin-prefix": "^0.8.4", "rustbn.js": "^0.2.0", "sorted-btree": "^1.6.0" } }, "sha512-7Ly9lqX2L5rHgmNvam6kI0iHmj/vDHgRjtinzEPUdHM6JNkFgs4Xc7WChM4DSOmV6RKGJJ09vaT3sFhPP2gNqQ=="],
 
     "@wharfkit/antelope/bn.js": ["bn.js@4.12.2", "", {}, "sha512-n4DSx829VRTRByMRGdjQ9iqsN0Bh4OolPsFnaZBLcbi8iXcB+kJ9s7EnRt4wILZNV3kPLHkRVfOc/HvhC3ovDw=="],
 

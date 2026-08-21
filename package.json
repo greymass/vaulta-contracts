@@ -4,8 +4,8 @@
         "test": "make test"
     },
     "dependencies": {
+        "@greymass/vert": "^3.0.0",
         "@vaulta/bolt": "^2.0.0",
-        "@vaulta/vert": "^2.1.1",
         "@wharfkit/antelope": "^1.1.1",
         "@wharfkit/cli": "^2.11.0",
         "@wharfkit/contract": "^1.1.5",
