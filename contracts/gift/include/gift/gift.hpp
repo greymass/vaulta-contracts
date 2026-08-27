@@ -58,6 +58,7 @@ public:
 
 private:
    config_row get_config();
+   void       require_enabled(const config_row& config) { check(config.enabled, "contract is disabled"); }
    void       set_enabled(bool enabled);
 };
 

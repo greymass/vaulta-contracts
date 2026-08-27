@@ -84,10 +84,10 @@ void gift::setquota(name creator, int64_t daily_quota_bytes)
 void gift::giftacct(name creator, name account, int64_t bytes, string memo)
 {
    require_auth(creator);
-   check(get_config().enabled, "contract is disabled");
    check(bytes > 0, "must gift positive bytes");
-   check(is_account(account), "account does not exist");
    check(memo.size() <= 256, "memo has more than 256 bytes");
+   require_enabled(get_config());
+   check(is_account(account), "account does not exist");
 
    creators_table creators(get_self(), get_self().value);
    auto           itr = creators.require_find(creator.value, "creator not registered");

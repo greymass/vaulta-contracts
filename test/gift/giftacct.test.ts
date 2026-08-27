@@ -9,7 +9,6 @@ import {
     getCreator,
     giftContract,
     giftInTx,
-    giftInTxAs,
     newuser,
     newuser2,
     newuser3,
@@ -66,7 +65,7 @@ describe('contract: gift - giftacct', () => {
     })
 
     test('accepts a newaccount signed by an account other than the paying creator, as premium sub-name creation requires', async () => {
-        await giftInTxAs(bob, alice, newuser, 4000)
+        await giftInTx(alice, newuser, 4000, '', bob)
         expect(Number(getGiftedRam(newuser).ram_bytes)).toBe(4000)
         expect(Number(getCreator(alice).used_bytes)).toBe(4136)
     })

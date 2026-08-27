@@ -33,13 +33,8 @@ console.log(`Generated private key (testnet-only, throwaway): ${newKey.toWif()}`
 
 const {abi} = await client.v1.chain.get_abi('eosio')
 
-const config = await client.v1.chain.get_table_rows({
-    code: giftAccount,
-    scope: giftAccount,
-    table: 'config',
-    json: true,
-})
-if (!config.rows[0]?.enabled) {
+const config = await giftContract.table('config').get()
+if (!config?.enabled) {
     throw new Error(`${giftAccount} is disabled; run the enable action before gifting.`)
 }
 
