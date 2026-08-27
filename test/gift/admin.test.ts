@@ -105,6 +105,13 @@ describe('contract: gift - creator admin', () => {
         expect(getCreator(alice)).toBeUndefined()
     })
 
+    test('rmcreator requires the contract authority', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await expect(contracts.gift.actions.rmcreator([alice]).send(bob)).rejects.toThrow(
+            'missing required authority'
+        )
+    })
+
     test('rmcreator rejects an unknown creator', async () => {
         await expect(contracts.gift.actions.rmcreator([alice]).send()).rejects.toThrow(
             'creator not registered'

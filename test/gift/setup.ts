@@ -5,6 +5,9 @@ export const giftContract = 'ram.vaulta'
 export const alice = 'alice'
 export const bob = 'bob'
 export const newuser = 'newuser'
+export const newuser2 = 'newuser2'
+export const newuser3 = 'newuser3'
+export const newuser4 = 'newuser4'
 
 export const contracts = {
     gift: blockchain.createContract(giftContract, './contracts/gift/build/gift', true),
@@ -13,7 +16,7 @@ export const contracts = {
 
 export async function resetContracts() {
     await blockchain.resetTables()
-    blockchain.createAccounts(alice, bob, newuser)
+    blockchain.createAccounts(alice, bob, newuser, newuser2, newuser3, newuser4)
 }
 
 export function getCreator(account: string) {

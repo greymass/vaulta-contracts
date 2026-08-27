@@ -33,6 +33,16 @@ console.log(`Generated private key (testnet-only, throwaway): ${newKey.toWif()}`
 
 const {abi} = await client.v1.chain.get_abi('eosio')
 
+const config = await client.v1.chain.get_table_rows({
+    code: giftAccount,
+    scope: giftAccount,
+    table: 'config',
+    json: true,
+})
+if (!config.rows[0]?.enabled) {
+    throw new Error(`${giftAccount} is disabled; run the enable action before gifting.`)
+}
+
 console.log(`Creating ${newAccount} — one transaction, one signature (${operatorAccount})`)
 
 const result = await operatorSession.transact({
@@ -48,7 +58,12 @@ const result = await operatorSession.transact({
         ),
         giftContract.action(
             'giftacct',
-            {op: operatorAccount, to: newAccount, bytes: 4000, memo: 'gifted account demo'},
+            {
+                creator: operatorAccount,
+                account: newAccount,
+                bytes: 4000,
+                memo: 'gifted account demo',
+            },
             {authorization: [{actor: operatorAccount, permission: 'active'}]}
         ),
     ],
