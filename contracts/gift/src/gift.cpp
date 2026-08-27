@@ -14,6 +14,9 @@ static bool created_in_transaction(name account)
       if (act.account != gift::SYSTEM_CONTRACT || act.name != "newaccount"_n) {
          continue;
       }
+      if (act.data.size() < 2 * sizeof(uint64_t)) {
+         continue;
+      }
       datastream<const char*> ds(act.data.data(), act.data.size());
       name                    creator;
       name                    created;
@@ -72,7 +75,7 @@ void gift::rmcreator(name creator)
 void gift::setquota(name creator, int64_t daily_quota_bytes)
 {
    require_auth(get_self());
-   check(daily_quota_bytes > 0, "quota must be positive");
+   check(daily_quota_bytes > GIFT_ROW_OVERHEAD, "quota must exceed the per-gift row overhead");
    creators_table creators(get_self(), get_self().value);
    auto           itr = creators.require_find(creator.value, "creator not registered");
    creators.modify(itr, same_payer, [&](auto& row) { row.daily_quota_bytes = daily_quota_bytes; });
