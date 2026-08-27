@@ -82,6 +82,26 @@ asset ram_cost_with_fee(uint32_t bytes, symbol core_symbol)
    return cost + fee;
 }
 
+// buyrambytes floors its bancor input, its fee gross-up and its bancor output; three tokens of slack, in bytes, covers all three
+uint32_t ram_request_bytes(uint32_t bytes)
+{
+   name          system_account = "eosio"_n;
+   rammarket     _rammarket(system_account, system_account.value);
+   auto          itr         = _rammarket.find(system_contract::ramcore_symbol.raw());
+   const int64_t ram_reserve = itr->base.balance.amount;
+   const int64_t eos_reserve = itr->quote.balance.amount;
+
+   const int64_t margin = 1 + int64_t(3.0 * (ram_reserve - bytes) / eos_reserve);
+   return bytes + uint32_t(margin);
+}
+
+// Mirrors what buyrambytes spends for the requested bytes, so the charge and the purchase agree exactly
+asset ram_charge_for_bytes(uint32_t bytes, symbol core_symbol)
+{
+   const int64_t cost = ram_cost(ram_request_bytes(bytes), core_symbol).amount;
+   return asset{int64_t(cost / double(0.995)), core_symbol};
+}
+
 asset ram_proceeds(uint32_t bytes, symbol core_symbol)
 {
    name          system_account = "eosio"_n;
