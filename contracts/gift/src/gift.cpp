@@ -25,11 +25,30 @@ static bool created_in_transaction(name account)
    return false;
 }
 
+gift::config_row gift::get_config()
+{
+   config_table config(get_self(), get_self().value);
+   return config.get_or_default();
+}
+
+void gift::set_enabled(bool enabled)
+{
+   require_auth(get_self());
+   config_table config(get_self(), get_self().value);
+   auto         row = config.get_or_default();
+   row.enabled      = enabled;
+   config.set(row, get_self());
+}
+
+void gift::enable() { set_enabled(true); }
+
+void gift::disable() { set_enabled(false); }
+
 void gift::addcreator(name creator, int64_t daily_quota_bytes)
 {
    require_auth(get_self());
    check(is_account(creator), "creator account does not exist");
-   check(daily_quota_bytes > 0, "quota must be positive");
+   check(daily_quota_bytes > GIFT_ROW_OVERHEAD, "quota must exceed the per-gift row overhead");
 
    creators_table creators(get_self(), get_self().value);
    check(creators.find(creator.value) == creators.end(), "creator already registered");
@@ -62,6 +81,7 @@ void gift::setquota(name creator, int64_t daily_quota_bytes)
 void gift::giftacct(name creator, name account, int64_t bytes, string memo)
 {
    require_auth(creator);
+   check(get_config().enabled, "contract is disabled");
    check(bytes > 0, "must gift positive bytes");
    check(is_account(account), "account does not exist");
    check(memo.size() <= 256, "memo has more than 256 bytes");

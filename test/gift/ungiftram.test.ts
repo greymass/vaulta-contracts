@@ -21,6 +21,7 @@ function getGiftedRam(account: string) {
 describe('contract: gift - ungiftram', () => {
     beforeEach(async () => {
         await resetContracts()
+        await contracts.gift.actions.enable().send()
         await contracts.gift.actions.addcreator([alice, 10000]).send()
         await giftInTx(alice, newuser, 4000, 'welcome')
     })

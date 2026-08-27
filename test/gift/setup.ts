@@ -39,9 +39,31 @@ export function sendActions(...actions: ReturnType<typeof packAction>[]) {
     )
 }
 
+export function getConfig() {
+    return contracts.gift.tables.config(Name.from(giftContract).value.value).getTableRows()[0]
+}
+
 export function giftInTx(creator: string, account: string, bytes: number | string, memo = '') {
     return sendActions(
         packAction(contracts.system, 'newaccount', {creator, account}, creator),
+        packAction(contracts.gift, 'giftacct', {creator, account, bytes, memo}, creator)
+    )
+}
+
+export function giftInTxAs(
+    newaccountCreator: string,
+    creator: string,
+    account: string,
+    bytes: number | string,
+    memo = ''
+) {
+    return sendActions(
+        packAction(
+            contracts.system,
+            'newaccount',
+            {creator: newaccountCreator, account},
+            newaccountCreator
+        ),
         packAction(contracts.gift, 'giftacct', {creator, account, bytes, memo}, creator)
     )
 }

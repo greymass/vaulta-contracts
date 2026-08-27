@@ -24,6 +24,7 @@ function getGiftedRam(account: string) {
 describe('contract: gift - giftacct', () => {
     beforeEach(async () => {
         await resetContracts()
+        await contracts.gift.actions.enable().send()
         await contracts.gift.actions.addcreator([alice, 10000]).send()
     })
 
@@ -34,6 +35,11 @@ describe('contract: gift - giftacct', () => {
         expect(row.gifter).toBe(giftContract)
         expect(Number(row.ram_bytes)).toBe(4000)
         expect(Number(getCreator(alice).used_bytes)).toBe(4136)
+    })
+
+    test('rejects a gift while the contract is disabled', async () => {
+        await contracts.gift.actions.disable().send()
+        await expect(giftInTx(alice, newuser, 4000)).rejects.toThrow('contract is disabled')
     })
 
     test('rejects a gift without a same-transaction newaccount', async () => {

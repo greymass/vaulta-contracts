@@ -1,10 +1,33 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
 
-import {alice, contracts, getCreator, resetContracts} from './setup'
+import {alice, bob, contracts, getConfig, getCreator, resetContracts} from './setup'
 
 describe('contract: gift - creator admin', () => {
     beforeEach(async () => {
         await resetContracts()
+    })
+
+    test('gifting is disabled until enabled', () => {
+        expect(getConfig()).toBeUndefined()
+    })
+
+    test('enable turns the contract on and disable turns it back off', async () => {
+        await contracts.gift.actions.enable().send()
+        expect(getConfig().enabled).toBe(true)
+        await contracts.gift.actions.disable().send()
+        expect(getConfig().enabled).toBe(false)
+    })
+
+    test('enable requires the contract authority', async () => {
+        await expect(contracts.gift.actions.enable().send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
+    })
+
+    test('disable requires the contract authority', async () => {
+        await expect(contracts.gift.actions.disable().send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
     })
 
     test('addcreator registers a creator with a clean quota window', async () => {
