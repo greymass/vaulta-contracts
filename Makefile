@@ -43,9 +43,9 @@ build/%/production: docker/image
 	$(DOCKER_RUN) make native/build/$*/production
 
 .PHONY: native/build/debug native/build/production
-native/build/debug: native/build/api/debug native/build/create/debug native/build/gift/debug native/build/mocksystem/debug native/build/mockreceiver/debug native/build/registry/debug native/build/sentiment/debug native/build/tokens/debug
+native/build/debug: native/build/api/debug native/build/create/debug native/build/gift/debug native/build/mocksystem/debug native/build/mockreceiver/debug native/build/power/debug native/build/registry/debug native/build/sentiment/debug native/build/tokens/debug
 
-native/build/production: native/build/api/production native/build/create/production native/build/gift/production native/build/registry/production native/build/sentiment/production native/build/tokens/production
+native/build/production: native/build/api/production native/build/create/production native/build/gift/production native/build/power/production native/build/registry/production native/build/sentiment/production native/build/tokens/production
 
 native/build/%/debug:
 	make -C contracts/$* build/debug
@@ -86,6 +86,16 @@ testnet/create/verify: node_modules
 .PHONY: testnet/gift
 testnet/gift: build/gift/debug
 	make -C contracts/gift testnet
+
+.PHONY: testnet/power
+testnet/power: build/power/debug node_modules
+	bun testnet/check-power-ram.ts
+	make -C contracts/power testnet
+
+.PHONY: testnet/power/verify
+testnet/power/verify: node_modules
+	bun testnet/verify-power.ts
+	bun testnet/check-power-ram.ts
 
 .PHONY: testnet/mockreceiver
 testnet/mockreceiver: build/mockreceiver/debug
@@ -132,6 +142,9 @@ test/gift: build/gift/debug node_modules codegen
 test/mockreceiver: build/mockreceiver/debug node_modules codegen
 	bun test -t "contract: mockreceiver"
 
+test/power: build/power/debug node_modules codegen
+	bun test -t "contract: power"
+
 test/registry: build/registry/debug node_modules codegen
 	bun test -t "contract: registry"
 
@@ -165,7 +178,7 @@ test: build/debug codegen node_modules
 # CODEGEN
 
 .PHONY: codegen
-codegen: ./codegen/api.ts ./codegen/gift.ts ./codegen/mockreceiver.ts ./codegen/registry.ts ./codegen/sentiment.ts ./codegen/token.ts ./codegen/tokens.ts
+codegen: ./codegen/api.ts ./codegen/gift.ts ./codegen/mockreceiver.ts ./codegen/power.ts ./codegen/registry.ts ./codegen/sentiment.ts ./codegen/token.ts ./codegen/tokens.ts
 
 .PHONY: codegen/clean
 codegen/clean:
@@ -179,6 +192,9 @@ codegen/clean:
 
 ./codegen/mockreceiver.ts: ./contracts/mockreceiver/build/mockreceiver.abi
 	${BIN}/wharfkit generate --json ./contracts/mockreceiver/build/mockreceiver.abi --file ./codegen/mockreceiver.ts mockreceiver
+
+./codegen/power.ts: ./contracts/power/build/power.abi
+	${BIN}/wharfkit generate --json ./contracts/power/build/power.abi --file ./codegen/power.ts power
 
 ./codegen/registry.ts: ./contracts/registry/build/registry.abi
 	${BIN}/wharfkit generate --json ./contracts/registry/build/registry.abi --file ./codegen/registry.ts registry
