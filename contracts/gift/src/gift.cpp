@@ -95,7 +95,7 @@ void gift::giftacct(name creator, name account, int64_t bytes, string memo)
    auto           now          = time_point_sec(current_time_point());
    int64_t        used         = itr->used_bytes;
    time_point_sec window_start = itr->window_start;
-   if (now.sec_since_epoch() >= window_start.sec_since_epoch() + QUOTA_WINDOW_SECONDS) {
+   if (now.sec_since_epoch() - window_start.sec_since_epoch() >= QUOTA_WINDOW_SECONDS) {
       used         = 0;
       window_start = now;
    }
