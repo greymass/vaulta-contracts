@@ -1,10 +1,33 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
 
-import {alice, contracts, getCreator, resetContracts} from './setup'
+import {alice, bob, contracts, getConfig, getCreator, resetContracts} from './setup'
 
 describe('contract: gift - creator admin', () => {
     beforeEach(async () => {
         await resetContracts()
+    })
+
+    test('gifting is disabled until enabled', () => {
+        expect(getConfig()).toBeUndefined()
+    })
+
+    test('enable turns the contract on and disable turns it back off', async () => {
+        await contracts.gift.actions.enable().send()
+        expect(getConfig().enabled).toBe(true)
+        await contracts.gift.actions.disable().send()
+        expect(getConfig().enabled).toBe(false)
+    })
+
+    test('enable requires the contract authority', async () => {
+        await expect(contracts.gift.actions.enable().send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
+    })
+
+    test('disable requires the contract authority', async () => {
+        await expect(contracts.gift.actions.disable().send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
     })
 
     test('addcreator registers a creator with a clean quota window', async () => {
@@ -28,10 +51,17 @@ describe('contract: gift - creator admin', () => {
         )
     })
 
-    test('addcreator rejects a non-positive quota', async () => {
-        await expect(contracts.gift.actions.addcreator([alice, 0]).send()).rejects.toThrow(
-            'quota must be positive'
-        )
+    test('addcreator rejects a quota that cannot fund a single gift', async () => {
+        for (const quota of [-1, 0, 1, 136]) {
+            await expect(contracts.gift.actions.addcreator([alice, quota]).send()).rejects.toThrow(
+                'quota must exceed the per-gift row overhead'
+            )
+        }
+    })
+
+    test('addcreator accepts the smallest quota that funds a gift', async () => {
+        await contracts.gift.actions.addcreator([alice, 137]).send()
+        expect(Number(getCreator(alice).daily_quota_bytes)).toBe(137)
     })
 
     test('addcreator requires the contract authority', async () => {
@@ -46,6 +76,23 @@ describe('contract: gift - creator admin', () => {
         expect(Number(getCreator(alice).daily_quota_bytes)).toBe(5000000)
     })
 
+    test('setquota rejects a quota that cannot fund a single gift', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        for (const quota of [-1, 0, 136]) {
+            await expect(contracts.gift.actions.setquota([alice, quota]).send()).rejects.toThrow(
+                'quota must exceed the per-gift row overhead'
+            )
+        }
+        expect(Number(getCreator(alice).daily_quota_bytes)).toBe(1000000)
+    })
+
+    test('setquota requires the contract authority', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await expect(contracts.gift.actions.setquota([alice, 5000000]).send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
+    })
+
     test('setquota rejects an unknown creator', async () => {
         await expect(contracts.gift.actions.setquota([alice, 5000000]).send()).rejects.toThrow(
             'creator not registered'
@@ -56,6 +103,13 @@ describe('contract: gift - creator admin', () => {
         await contracts.gift.actions.addcreator([alice, 1000000]).send()
         await contracts.gift.actions.rmcreator([alice]).send()
         expect(getCreator(alice)).toBeUndefined()
+    })
+
+    test('rmcreator requires the contract authority', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await expect(contracts.gift.actions.rmcreator([alice]).send(bob)).rejects.toThrow(
+            'missing required authority'
+        )
     })
 
     test('rmcreator rejects an unknown creator', async () => {

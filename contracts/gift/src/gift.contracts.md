@@ -1,3 +1,25 @@
+<h1 class="contract">enable</h1>
+
+---
+
+spec_version: "0.2.0"
+title: 'Enable Contract'
+summary: 'Allow registered creators to gift RAM.'
+icon: https://avatars.githubusercontent.com/u/147292861?s=400&u=3b1af66e90dd851f4d7c096ed6a2fbb4b9e190da
+
+---
+
+<h1 class="contract">disable</h1>
+
+---
+
+spec_version: "0.2.0"
+title: 'Disable Contract'
+summary: 'Stop all RAM gifting without removing registered creators.'
+icon: https://avatars.githubusercontent.com/u/147292861?s=400&u=3b1af66e90dd851f4d7c096ed6a2fbb4b9e190da
+
+---
+
 <h1 class="contract">addcreator</h1>
 
 ---

@@ -5,6 +5,8 @@ export const giftContract = 'ram.vaulta'
 export const alice = 'alice'
 export const bob = 'bob'
 export const newuser = 'newuser'
+export const newuser2 = 'newuser2'
+export const newuser3 = 'newuser3'
 
 export const contracts = {
     gift: blockchain.createContract(giftContract, './contracts/gift/build/gift', true),
@@ -13,7 +15,7 @@ export const contracts = {
 
 export async function resetContracts() {
     await blockchain.resetTables()
-    blockchain.createAccounts(alice, bob, newuser)
+    blockchain.createAccounts(alice, bob, newuser, newuser2, newuser3)
 }
 
 export function getCreator(account: string) {
@@ -39,9 +41,24 @@ export function sendActions(...actions: ReturnType<typeof packAction>[]) {
     )
 }
 
-export function giftInTx(creator: string, account: string, bytes: number | string, memo = '') {
+export function getConfig() {
+    return contracts.gift.tables.config(Name.from(giftContract).value.value).getTableRows()[0]
+}
+
+export function giftInTx(
+    creator: string,
+    account: string,
+    bytes: number | string,
+    memo = '',
+    newaccountCreator = creator
+) {
     return sendActions(
-        packAction(contracts.system, 'newaccount', {creator, account}, creator),
+        packAction(
+            contracts.system,
+            'newaccount',
+            {creator: newaccountCreator, account},
+            newaccountCreator
+        ),
         packAction(contracts.gift, 'giftacct', {creator, account, bytes, memo}, creator)
     )
 }
