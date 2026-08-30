@@ -62,6 +62,16 @@ clean:
 mainnet/create: build/create/production
 	make -C contracts/create mainnet
 
+.PHONY: mainnet/power
+mainnet/power: build/power/production node_modules
+	NETWORK=mainnet bun testnet/check-power-ram.ts
+	make -C contracts/power mainnet
+
+.PHONY: mainnet/power/verify
+mainnet/power/verify: node_modules
+	NETWORK=mainnet bun testnet/verify-power.ts
+	NETWORK=mainnet bun testnet/check-power-ram.ts
+
 .PHONY: mainnet/sentiment
 mainnet/sentiment: build/sentiment/debug
 	make -C contracts/sentiment mainnet

@@ -11,15 +11,20 @@ const ACCOUNT_OVERHEAD_BYTES = 16384
 const MARGIN_PERCENT = 10
 const RING_SLOTS = 25
 
-for (const required of ['TESTNET_NODE_URL', 'POWER_TESTNET_ACCOUNT']) {
+const networkEnv = process.env.NETWORK ?? 'testnet'
+if (networkEnv !== 'testnet' && networkEnv !== 'mainnet') {
+    throw new Error(`NETWORK must be "testnet" or "mainnet", got "${networkEnv}"`)
+}
+const network = networkEnv.toUpperCase()
+for (const required of [`${network}_NODE_URL`, `POWER_${network}_ACCOUNT`]) {
     if (!process.env[required]) throw new Error(`${required} is not set in .env`)
 }
 
-const client = new APIClient({url: process.env.TESTNET_NODE_URL})
-const powerAccount = process.env.POWER_TESTNET_ACCOUNT!
+const client = new APIClient({url: process.env[`${network}_NODE_URL`]})
+const powerAccount = process.env[`POWER_${network}_ACCOUNT`]!
 const contractName = process.env.POWER_CONTRACT_NAME ?? 'power'
 
-console.log(`node:            ${process.env.TESTNET_NODE_URL}`)
+console.log(`node:            ${process.env[`${network}_NODE_URL`]}`)
 console.log(`power contract:  ${powerAccount}`)
 
 function artifactFloor(): number {

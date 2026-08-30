@@ -3,14 +3,19 @@
 import type {API} from '@wharfkit/antelope'
 import {Action, APIClient, APIError, Asset, Bytes, Name, Serializer, Transaction} from '@wharfkit/antelope'
 
-for (const required of ['TESTNET_NODE_URL', 'POWER_TESTNET_ACCOUNT']) {
+const networkEnv = process.env.NETWORK ?? 'testnet'
+if (networkEnv !== 'testnet' && networkEnv !== 'mainnet') {
+    throw new Error(`NETWORK must be "testnet" or "mainnet", got "${networkEnv}"`)
+}
+const network = networkEnv.toUpperCase()
+for (const required of [`${network}_NODE_URL`, `POWER_${network}_ACCOUNT`]) {
     if (!process.env[required]) throw new Error(`${required} is not set in .env`)
 }
 
-const client = new APIClient({url: process.env.TESTNET_NODE_URL})
-const powerAccount = process.env.POWER_TESTNET_ACCOUNT!
+const client = new APIClient({url: process.env[`${network}_NODE_URL`]})
+const powerAccount = process.env[`POWER_${network}_ACCOUNT`]!
 
-console.log(`node:            ${process.env.TESTNET_NODE_URL}`)
+console.log(`node:            ${process.env[`${network}_NODE_URL`]}`)
 console.log(`power contract:  ${powerAccount}`)
 
 function formatException(except: API.v1.SendTransactionResponseException): string {
