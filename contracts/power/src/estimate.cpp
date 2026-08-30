@@ -13,10 +13,8 @@ namespace vaultacontracts {
    const int64_t cpu_amount = int64_t(int128_t(cfg.cpu_frac) * state.cpu.weight / eosiosystem::powerup_frac);
    const int64_t net_amount = int64_t(int128_t(cfg.net_frac) * state.net.weight / eosiosystem::powerup_frac);
 
-   int64_t fee = antelope::powerup_fee(state.cpu, cpu_amount) + antelope::powerup_fee(state.net, net_amount);
-   if (fee < state.min_powerup_fee.amount) {
-      fee = state.min_powerup_fee.amount;
-   }
+   const int64_t fee = antelope::powerup_fee(state.cpu, cpu_amount) + antelope::powerup_fee(state.net, net_amount);
+   check(fee >= state.min_powerup_fee.amount, "the configured resources price below the chain's minimum powerup fee");
 
    const asset ram_charge =
       antelope::ram_charge_for_bytes(uint32_t(cfg.order_bytes + cfg.userres_bytes), cfg.token_symbol);

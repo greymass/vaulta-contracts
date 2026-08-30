@@ -14,6 +14,13 @@ describe('contract: power - Cost Estimation', () => {
         expect(quote.value).toBeGreaterThan(0)
     })
 
+    test('rejects a quote when the fee prices below the chain minimum', async () => {
+        await configure({cpu_frac: 1, net_frac: 1})
+        await expect(contracts.power.actions.estimatecost([]).send(alice)).rejects.toThrow(
+            "the configured resources price below the chain's minimum powerup fee"
+        )
+    })
+
     test('the quote covers a real powerup with change to spare', async () => {
         const traces = await contracts.power.actions.estimatecost([]).send(alice)
         const quote = traces[0].returnValue
