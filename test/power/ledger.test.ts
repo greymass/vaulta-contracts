@@ -1,5 +1,4 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
-import {Asset, Name} from '@wharfkit/antelope'
 
 import {advanceTime} from '../helpers'
 import {
@@ -7,26 +6,18 @@ import {
     committedBytes,
     configure,
     contracts,
-    feeSink,
     ledgerRow,
+    measureTransfer,
     occupiedSlots,
     powerContract,
     resetContracts,
     setPowerupDays,
-    systemTokenSymbol,
 } from './setup'
 
 const bucket = 3600
 
 function transfer() {
     return contracts.token.actions.transfer([alice, powerContract, '10.0000 A', '']).send(alice)
-}
-
-function feeSinkBalance(): number {
-    const scope = Name.from(feeSink).value.value
-    const primary = Asset.Symbol.from(systemTokenSymbol).code.value.value
-    const row = contracts.token.tables.accounts(scope).getTableRow(primary)
-    return row ? Asset.from(row.balance).value : 0
 }
 
 describe('contract: power - RAM Ledger', () => {
@@ -37,9 +28,7 @@ describe('contract: power - RAM Ledger', () => {
 
     test('holds twenty-five slots', async () => {
         await transfer()
-        const scope = Name.from(powerContract).value.value
-        const row = contracts.power.tables.ledger(scope).getTableRows()[0]
-        expect(row.slots.length).toBe(25)
+        expect(ledgerRow().slots.length).toBe(25)
     })
 
     test('records an order in the slot for the current bucket', async () => {
@@ -107,9 +96,8 @@ describe('contract: power - RAM Ledger', () => {
         await configure({cushion_bytes: 0})
         await transfer()
         await setPowerupDays(7)
-        const before = feeSinkBalance()
-        await transfer()
-        expect(feeSinkBalance()).toBe(before)
+        const result = await measureTransfer(alice, '10.0000 A')
+        expect(result.ramGained).toBeGreaterThan(0)
     })
 
     test('carried bytes expire on the window they were bought under', async () => {
@@ -121,12 +109,12 @@ describe('contract: power - RAM Ledger', () => {
         expect(committedBytes()).toBe(405 + 405)
     })
 
-    test('a drained ring lets the contract forward the charge again', async () => {
+    test('a drained ring lets the contract refund the charge again', async () => {
         await configure({cushion_bytes: 0})
         await transfer()
         advanceTime(25 * bucket)
-        const before = feeSinkBalance()
-        await transfer()
-        expect(feeSinkBalance()).toBeGreaterThan(before)
+        const result = await measureTransfer(alice, '10.0000 A')
+        expect(result.ramGained).toBe(0)
+        expect(result.senderSpent).toBe(result.feesGained)
     })
 })

@@ -32,7 +32,6 @@ public:
    {
       name    token_contract;
       symbol  token_symbol;
-      name    fee_sink;
       int64_t cpu_frac      = 0;
       int64_t net_frac      = 0;
       int64_t order_bytes   = 0;
@@ -52,7 +51,6 @@ public:
 
    [[eosio::action]] void configure(const name    token_contract,
                                     const symbol  token_symbol,
-                                    const name    fee_sink,
                                     const int64_t cpu_frac,
                                     const int64_t net_frac,
                                     const int64_t order_bytes,
@@ -69,7 +67,7 @@ public:
    using estimatecost_action = eosio::action_wrapper<"estimatecost"_n, &power::estimatecost>;
 
    [[eosio::action]] void
-   logpowerup(const name sender, const name receiver, const asset cost, const asset ram_charge, const asset refund);
+   logpowerup(const name sender, const name receiver, const asset cost, const asset ram_spent, const asset refund);
    using logpowerup_action = eosio::action_wrapper<"logpowerup"_n, &power::logpowerup>;
 
 private:

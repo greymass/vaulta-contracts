@@ -21,12 +21,12 @@ Sending more than the `estimatecost` quote is safe: the excess is refunded to th
 | Action | Auth | Description |
 |---|---|---|
 | `transfer` notification | token sender | Entry point. Validates token and memo, computes the order, sends `powerup` then `settle` inline. |
-| `settle(sender, receiver, payment, bytes, ram_charge)` | contract, inline only | Runs after the powerup has committed. Records the bytes, buys or forwards the RAM charge, refunds the remainder. |
+| `settle(sender, receiver, payment, bytes, ram_charge)` | contract, inline only | Runs after the powerup has committed. Records the bytes, spends the RAM charge on RAM when the float must grow, and refunds everything else. |
 | `estimatecost()` | none (read-only) | Returns the token cost of one powerup at the current market, for wallets to quote before transferring. |
-| `configure(token_contract, token_symbol, fee_sink, cpu_frac, net_frac, order_bytes, userres_bytes, cushion_bytes)` | contract | Sets the config singleton. The contract is inert until this runs. |
-| `logpowerup(sender, receiver, cost, ram_charge, refund)` | contract | Inline log emitted per powerup for indexers. |
+| `configure(token_contract, token_symbol, cpu_frac, net_frac, order_bytes, userres_bytes, cushion_bytes)` | contract | Sets the config singleton. The contract is inert until this runs. |
+| `logpowerup(sender, receiver, cost, ram_spent, refund)` | contract | Inline log emitted per powerup for indexers. `ram_spent` is zero when the charge was refunded. |
 
-The contract stores two singletons, `config` and `ledger`. `ledger` holds a 25-slot ring tracking the bytes committed by unexpired orders, used to decide whether an order's RAM charge is spent on RAM or forwarded to the fee sink. The ring's bucket duration comes from the chain's `powerup_days`; when that changes, the bytes still live under the old window move into `carry_bytes` and keep counting until `carry_expires`, and the ring restarts on the new duration.
+The contract stores two singletons, `config` and `ledger`. `ledger` holds a 25-slot ring tracking the bytes committed by unexpired orders, used to decide whether an order's RAM charge is spent on RAM or refunded to the sender. The ring's bucket duration comes from the chain's `powerup_days`; when that changes, the bytes still live under the old window move into `carry_bytes` and keep counting until `carry_expires`, and the ring restarts on the new duration.
 
 RAM costs are measured constants rather than derived at compile time: a `powup.order` row bills its payer 405 bytes on chain (`order_bytes`), a `userres` row for a receiver with no existing resources bills 272 bytes (`userres_bytes`), and the contract reserves 500,000 bytes (`cushion_bytes`) for its own footprint plus margin. The footprint is dominated by code, which the chain bills at ten times the wasm size, so `cushion_bytes` must stay at or above `10 * wasm + abi + overhead` with margin on every deploy. `bun testnet/check-power-ram.ts` verifies the cushion and the stored ledger's integrity; the `testnet/power` make target runs it before deploying and `testnet/power/verify` runs it after.
 

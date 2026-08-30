@@ -33,7 +33,6 @@ try {
     console.log('\nconfiguration:')
     console.log(`  token contract: ${cfg.token_contract}`)
     console.log(`  token symbol:   ${cfg.token_symbol}`)
-    console.log(`  fee sink:       ${cfg.fee_sink}`)
     console.log(`  cpu_frac:       ${cfg.cpu_frac}`)
     console.log(`  net_frac:       ${cfg.net_frac}`)
     console.log(`  order_bytes:    ${cfg.order_bytes}`)

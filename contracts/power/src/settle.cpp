@@ -21,13 +21,11 @@ power::settle(const name sender, const name receiver, const asset payment, const
    if (free < 0) {
       eosiosystem::system_contract::buyrambytes_action buyram_act{SYSTEM_CONTRACT, {get_self(), "active"_n}};
       buyram_act.send(get_self(), get_self(), antelope::ram_request_bytes(uint32_t(bytes)));
-   } else {
-      eosio::token::transfer_action sink_act{cfg.token_contract, {get_self(), "active"_n}};
-      sink_act.send(get_self(), cfg.fee_sink, ram_charge, "powerup ram charge");
    }
+   const asset ram_spent = free < 0 ? ram_charge : asset(0, cfg.token_symbol);
 
    const asset balance = contract_balance(cfg);
-   const asset refund  = balance - ram_charge;
+   const asset refund  = balance - ram_spent;
    check(refund.amount >= 0, "the order consumed more than the payment allowed");
 
    if (refund.amount > 0) {
@@ -36,11 +34,11 @@ power::settle(const name sender, const name receiver, const asset payment, const
    }
 
    logpowerup_action log_act{get_self(), {get_self(), "active"_n}};
-   log_act.send(sender, receiver, payment - balance, ram_charge, refund);
+   log_act.send(sender, receiver, payment - balance, ram_spent, refund);
 }
 
 [[eosio::action]] void
-power::logpowerup(const name sender, const name receiver, const asset cost, const asset ram_charge, const asset refund)
+power::logpowerup(const name sender, const name receiver, const asset cost, const asset ram_spent, const asset refund)
 {
    require_auth(get_self());
    check(get_sender() == get_self(), "logpowerup runs only as an inline action of this contract");

@@ -18,7 +18,6 @@ power::config_row power::get_config()
 
 [[eosio::action]] void power::configure(const name    token_contract,
                                         const symbol  token_symbol,
-                                        const name    fee_sink,
                                         const int64_t cpu_frac,
                                         const int64_t net_frac,
                                         const int64_t order_bytes,
@@ -27,8 +26,6 @@ power::config_row power::get_config()
 {
    require_auth(get_self());
    check(is_account(token_contract), "the token contract must be an existing account");
-   check(is_account(fee_sink), "the fee sink must be an existing account");
-   check(fee_sink != get_self(), "the fee sink must not be the contract itself");
    check(cpu_frac >= 0 && cpu_frac <= eosiosystem::powerup_frac, "cpu_frac must be within the market range");
    check(net_frac >= 0 && net_frac <= eosiosystem::powerup_frac, "net_frac must be within the market range");
    check(cpu_frac > 0 || net_frac > 0, "the allotment must request some resource");
@@ -37,9 +34,8 @@ power::config_row power::get_config()
    check(cushion_bytes >= 0, "cushion_bytes must not be negative");
 
    config_singleton _config(get_self(), get_self().value);
-   _config.set(
-      config_row{token_contract, token_symbol, fee_sink, cpu_frac, net_frac, order_bytes, userres_bytes, cushion_bytes},
-      get_self());
+   _config.set(config_row{token_contract, token_symbol, cpu_frac, net_frac, order_bytes, userres_bytes, cushion_bytes},
+               get_self());
 }
 
 } // namespace vaultacontracts

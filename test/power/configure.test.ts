@@ -1,15 +1,15 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
 
-import {configure, powerContract, resetContracts} from './setup'
+import {configure, resetContracts} from './setup'
 
 describe('contract: power - Configuration', () => {
     beforeEach(async () => {
         await resetContracts()
     })
 
-    test('rejects a fee sink set to the contract itself', async () => {
-        await expect(configure({fee_sink: powerContract})).rejects.toThrow(
-            'the fee sink must not be the contract itself'
+    test('rejects an allotment requesting no resources', async () => {
+        await expect(configure({cpu_frac: 0, net_frac: 0})).rejects.toThrow(
+            'the allotment must request some resource'
         )
     })
 })

@@ -5,7 +5,6 @@ import {blockchain} from '../helpers'
 export const powerContract = 'power.gm'
 export const systemContract = 'eosio'
 export const systemTokenContract = 'eosio.token'
-export const feeSink = 'fee.sink'
 export const alice = 'alice'
 export const bob = 'bob'
 export const longName = 'atticlabeosb1'
@@ -42,6 +41,25 @@ export const contracts = {
         true
     ),
     power: blockchain.createContract(powerContract, './contracts/power/build/power', true),
+}
+
+export function tokenBalance(account: string): number {
+    const scope = Name.from(account).value.value
+    const primary = Asset.Symbol.from(systemTokenSymbol).code.value.value
+    const row = contracts.token.tables.accounts(scope).getTableRow(primary)
+    return row ? Number(Asset.from(row.balance).units) : 0
+}
+
+export async function measureTransfer(sender: string, amount: string, memo = '') {
+    const senderBefore = tokenBalance(sender)
+    const feesBefore = tokenBalance('eosio.fees')
+    const ramBefore = tokenBalance('eosio.ram')
+    await contracts.token.actions.transfer([sender, powerContract, amount, memo]).send(sender)
+    return {
+        senderSpent: senderBefore - tokenBalance(sender),
+        feesGained: tokenBalance('eosio.fees') - feesBefore,
+        ramGained: tokenBalance('eosio.ram') - ramBefore,
+    }
 }
 
 export function orderCount(): number {
@@ -97,7 +115,7 @@ function powerupResourceConfig() {
 
 export async function resetContracts() {
     await blockchain.resetTables()
-    blockchain.createAccounts(alice, bob, longName, feeSink, ...systemAccounts)
+    blockchain.createAccounts(alice, bob, longName, ...systemAccounts)
 
     const supply = Asset.fromFloat(1000000000, systemTokenSymbol)
     await contracts.token.actions.create([systemTokenContract, String(supply)]).send()
@@ -120,10 +138,6 @@ export async function resetContracts() {
             .transfer([systemTokenContract, account, '1000.0000 A', ''])
             .send(systemTokenContract)
     }
-    await contracts.token.actions.open([feeSink, systemTokenSymbol, feeSink]).send(feeSink)
-    await contracts.token.actions
-        .open(['eosio.fees', systemTokenSymbol, 'eosio.fees'])
-        .send('eosio.fees')
 
     const fakeSupply = Asset.fromFloat(1000000000, systemTokenSymbol)
     await contracts.faketoken.actions.create(['fake.token', String(fakeSupply)]).send()
@@ -134,7 +148,6 @@ export async function resetContracts() {
 export const defaultConfig = {
     token_contract: systemTokenContract,
     token_symbol: systemTokenSymbol,
-    fee_sink: feeSink,
     cpu_frac: 10000000000,
     net_frac: 1000000000,
     order_bytes: 405,
@@ -148,7 +161,6 @@ export async function configure(overrides = {}) {
         .configure([
             config.token_contract,
             config.token_symbol,
-            config.fee_sink,
             config.cpu_frac,
             config.net_frac,
             config.order_bytes,
