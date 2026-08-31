@@ -82,7 +82,7 @@ asset ram_cost_with_fee(uint32_t bytes, symbol core_symbol)
    return cost + fee;
 }
 
-// buyrambytes floors its bancor input, its fee gross-up and its bancor output; three tokens of slack, in bytes, covers all three
+// buyrambytes truncates its bancor input, fee gross-up and output, and buyram rounds its fee up; three units of margin provably cover all four (proof in the 2026-08-31 ledger entry)
 uint32_t ram_request_bytes(uint32_t bytes)
 {
    name          system_account = "eosio"_n;
