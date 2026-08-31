@@ -109,6 +109,24 @@ describe('contract: power - RAM Ledger', () => {
         expect(committedBytes()).toBe(405 + 405)
     })
 
+    test('an expired carry is not resurrected by a later window change', async () => {
+        await transfer()
+        await setPowerupDays(7)
+        await transfer()
+        advanceTime(30 * 24 * bucket)
+        await setPowerupDays(1)
+        await transfer()
+        expect(Number(ledgerRow().carry_bytes)).toBe(0)
+        expect(committedBytes()).toBe(405)
+    })
+
+    test('rejects a powerup window whose slot width overflows', async () => {
+        await setPowerupDays(268435456)
+        await expect(transfer()).rejects.toThrow(
+            'the powerup window overflows the ledger slot width'
+        )
+    })
+
     test('a drained ring lets the contract refund the charge again', async () => {
         await configure({cushion_bytes: 0})
         await transfer()

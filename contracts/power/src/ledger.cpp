@@ -32,6 +32,7 @@ int64_t power::record_and_measure(const config_row& cfg, const int64_t bytes)
    check(state.powerup_days > 0, "the powerup window must be positive");
 
    const uint32_t duration = uint32_t(uint64_t(state.powerup_days) * 86400 / RING_SLOTS_PER_WINDOW);
+   check(duration > 0, "the powerup window overflows the ledger slot width");
    const uint32_t now      = uint32_t(current_time_point().sec_since_epoch());
    const uint32_t now_slot = now / duration;
 
@@ -41,12 +42,12 @@ int64_t power::record_and_measure(const config_row& cfg, const int64_t bytes)
       ledger.slots.assign(RING_SLOTS, ram_slot{});
       ledger.duration = duration;
    }
-   if (ledger.duration != duration) {
-      carry_forward(ledger, now, duration);
-   }
    if (now >= ledger.carry_expires) {
       ledger.carry_bytes   = 0;
       ledger.carry_expires = 0;
+   }
+   if (ledger.duration != duration) {
+      carry_forward(ledger, now, duration);
    }
 
    ram_slot& current = ledger.slots[now_slot % RING_SLOTS];

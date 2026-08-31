@@ -48,7 +48,7 @@ describe('contract: power - RAM accounting', () => {
         expect(quota(powerContract)).toBeGreaterThanOrEqual(occupied)
     })
 
-    test('runs forty consecutive orders without error', async () => {
+    test('records forty consecutive orders in the queue', async () => {
         for (let i = 0; i < 40; i++) {
             await contracts.token.actions
                 .transfer([alice, powerContract, '10.0000 A', ''])
