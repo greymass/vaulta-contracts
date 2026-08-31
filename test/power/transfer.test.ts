@@ -30,6 +30,22 @@ describe('contract: power - Transfer Handling', () => {
         ).rejects.toThrow('does not exist')
     })
 
+    test('rejects a thirteen character memo outside the name alphabet', async () => {
+        await expect(
+            contracts.token.actions
+                .transfer([alice, powerContract, '1.0000 A', 'hello world!!'])
+                .send(alice)
+        ).rejects.toThrow('character is not in allowed character set for names')
+    })
+
+    test('rejects a thirteen character memo with a bad thirteenth character', async () => {
+        await expect(
+            contracts.token.actions
+                .transfer([alice, powerContract, '1.0000 A', 'atticlabeosbz'])
+                .send(alice)
+        ).rejects.toThrow('thirteenth character in name cannot be a letter that comes after j')
+    })
+
     test('rejects a memo longer than an account name', async () => {
         await expect(
             contracts.token.actions
