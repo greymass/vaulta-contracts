@@ -30,7 +30,9 @@ power::config_row power::get_config()
    check(net_frac >= 0 && net_frac <= eosiosystem::powerup_frac, "net_frac must be within the market range");
    check(cpu_frac > 0 || net_frac > 0, "the allotment must request some resource");
    check(order_bytes > 0, "order_bytes must be positive");
+   check(order_bytes <= 1000000, "order_bytes must not exceed one million");
    check(userres_bytes >= 0, "userres_bytes must not be negative");
+   check(userres_bytes <= 1000000, "userres_bytes must not exceed one million");
    check(cushion_bytes >= 0, "cushion_bytes must not be negative");
 
    config_singleton _config(get_self(), get_self().value);
