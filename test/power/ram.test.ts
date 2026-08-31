@@ -1,7 +1,15 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
-import {Name} from '@wharfkit/antelope'
+import {Asset, Name} from '@wharfkit/antelope'
 
-import {alice, configure, contracts, defaultConfig, powerContract, resetContracts} from './setup'
+import {
+    alice,
+    configure,
+    contracts,
+    defaultConfig,
+    powerContract,
+    resetContracts,
+    systemContract,
+} from './setup'
 
 function quota(account: string): number {
     const scope = Name.from(account).value.value
@@ -25,6 +33,18 @@ describe('contract: power - RAM accounting', () => {
     test('buys at least the bytes one order occupies', async () => {
         await contracts.token.actions.transfer([alice, powerContract, '10.0000 A', '']).send(alice)
         const occupied = defaultConfig.order_bytes + defaultConfig.userres_bytes
+        expect(quota(powerContract)).toBeGreaterThanOrEqual(occupied)
+    })
+
+    test('buys RAM when the market prices an order below one token unit', async () => {
+        await contracts.system.actions.setram(['1000000000000000']).send(systemContract)
+        const eosioScope = Name.from(systemContract).value.value
+        const market = contracts.system.tables.rammarket(eosioScope).getTableRows()[0]
+        const ramReserve = Number(market.base.balance.split(' ')[0])
+        const eosReserve = Number(Asset.from(market.quote.balance).units)
+        const occupied = defaultConfig.order_bytes + defaultConfig.userres_bytes
+        expect(Math.floor((eosReserve * occupied) / (ramReserve - occupied))).toBe(0)
+        await contracts.token.actions.transfer([alice, powerContract, '10.0000 A', '']).send(alice)
         expect(quota(powerContract)).toBeGreaterThanOrEqual(occupied)
     })
 
