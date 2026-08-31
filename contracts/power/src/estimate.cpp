@@ -8,7 +8,13 @@ namespace vaultacontracts {
 
    eosiosystem::powerup_state_singleton _state(SYSTEM_CONTRACT, 0);
    check(_state.exists(), "the powerup market is not initialized on this chain");
-   const auto state = _state.get();
+   auto state = _state.get();
+
+   const eosio::time_point_sec now = eosio::current_time_point();
+   antelope::update_utilization(now, state.cpu);
+   antelope::update_weight(now, state.cpu);
+   antelope::update_utilization(now, state.net);
+   antelope::update_weight(now, state.net);
 
    const int64_t cpu_amount = int64_t(int128_t(cfg.cpu_frac) * state.cpu.weight / eosiosystem::powerup_frac);
    const int64_t net_amount = int64_t(int128_t(cfg.net_frac) * state.net.weight / eosiosystem::powerup_frac);

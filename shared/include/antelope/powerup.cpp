@@ -49,4 +49,35 @@ int64_t powerup_fee(const eosiosystem::powerup_state_resource& state, int64_t ut
    return std::ceil(fee);
 }
 
+void update_utilization(eosio::time_point_sec now, eosiosystem::powerup_state_resource& res)
+{
+   if (now <= res.utilization_timestamp)
+      return;
+
+   if (res.utilization >= res.adjusted_utilization) {
+      res.adjusted_utilization = res.utilization;
+   } else {
+      int64_t diff  = res.adjusted_utilization - res.utilization;
+      int64_t delta = int64_t(
+         diff * std::exp(-double(now.utc_seconds - res.utilization_timestamp.utc_seconds) / double(res.decay_secs)));
+      delta                    = std::clamp(delta, int64_t(0), diff);
+      res.adjusted_utilization = res.utilization + delta;
+   }
+   res.utilization_timestamp = now;
+}
+
+void update_weight(eosio::time_point_sec now, eosiosystem::powerup_state_resource& res)
+{
+   if (now >= res.target_timestamp) {
+      res.weight_ratio = res.target_weight_ratio;
+   } else {
+      res.weight_ratio = res.initial_weight_ratio +
+                         int128_t(res.target_weight_ratio - res.initial_weight_ratio) *
+                            (now.utc_seconds - res.initial_timestamp.utc_seconds) /
+                            (res.target_timestamp.utc_seconds - res.initial_timestamp.utc_seconds);
+   }
+   res.weight = int64_t(res.assumed_stake_weight * int128_t(eosiosystem::powerup_frac) / res.weight_ratio -
+                        res.assumed_stake_weight);
+}
+
 } // namespace antelope
