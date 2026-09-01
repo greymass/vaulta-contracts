@@ -36,8 +36,11 @@ try {
     }
     const cfg = rows[0]
     console.log('\nconfiguration:')
-    console.log(`  token contract: ${cfg.token_contract}`)
-    console.log(`  token symbol:   ${cfg.token_symbol}`)
+    for (const rail of cfg.rails) {
+        console.log(
+            `  rail:           ${rail.token_symbol} via ${rail.token_contract} -> ${rail.powerup_contract}::powerup`
+        )
+    }
     console.log(`  cpu_frac:       ${cfg.cpu_frac}`)
     console.log(`  net_frac:       ${cfg.net_frac}`)
     console.log(`  order_bytes:    ${cfg.order_bytes}`)

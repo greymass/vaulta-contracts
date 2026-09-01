@@ -145,9 +145,14 @@ export async function resetContracts() {
     await contracts.faketoken.actions.transfer(['fake.token', alice, '1000.0000 A', '']).send()
 }
 
-export const defaultConfig = {
+export const defaultRail = {
     token_contract: systemTokenContract,
     token_symbol: systemTokenSymbol,
+    powerup_contract: systemContract,
+}
+
+export const defaultConfig = {
+    rails: [defaultRail],
     cpu_frac: 10000000000,
     net_frac: 1000000000,
     order_bytes: 405,
@@ -159,8 +164,7 @@ export async function configure(overrides = {}) {
     const config = {...defaultConfig, ...overrides}
     await contracts.power.actions
         .configure([
-            config.token_contract,
-            config.token_symbol,
+            config.rails,
             config.cpu_frac,
             config.net_frac,
             config.order_bytes,

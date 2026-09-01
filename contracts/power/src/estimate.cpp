@@ -4,7 +4,8 @@ namespace vaultacontracts {
 
 [[eosio::action, eosio::read_only]] asset power::estimatecost()
 {
-   const config_row cfg = get_config();
+   const config_row cfg          = get_config();
+   const symbol     quote_symbol = cfg.rails[0].token_symbol;
 
    eosiosystem::powerup_state_singleton _state(SYSTEM_CONTRACT, 0);
    check(_state.exists(), "the powerup market is not initialized on this chain");
@@ -22,10 +23,9 @@ namespace vaultacontracts {
    const int64_t fee = antelope::powerup_fee(state.cpu, cpu_amount) + antelope::powerup_fee(state.net, net_amount);
    check(fee >= state.min_powerup_fee.amount, "the configured resources price below the chain's minimum powerup fee");
 
-   const asset ram_charge =
-      antelope::ram_charge_for_bytes(uint32_t(cfg.order_bytes + cfg.userres_bytes), cfg.token_symbol);
+   const asset ram_charge = antelope::ram_charge_for_bytes(uint32_t(cfg.order_bytes + cfg.userres_bytes), quote_symbol);
 
-   return asset(fee, cfg.token_symbol) + ram_charge;
+   return asset(fee, quote_symbol) + ram_charge;
 }
 
 } // namespace vaultacontracts

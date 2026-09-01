@@ -11,7 +11,7 @@ describe('contract: power - Transfer Handling', () => {
     test('rejects a token from an undesignated contract', async () => {
         await expect(
             contracts.faketoken.actions.transfer([alice, powerContract, '1.0000 A', '']).send(alice)
-        ).rejects.toThrow('only accepts tokens from the designated token contract')
+        ).rejects.toThrow('the transfer matches no configured payment rail')
     })
 
     test('rejects a memo that is not an account name', async () => {
