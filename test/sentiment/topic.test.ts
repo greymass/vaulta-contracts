@@ -42,6 +42,43 @@ describe('contract: sentiment - Topic Management', () => {
                 expect(rows[2].id).toBe('topic3')
             })
 
+            test('contract authorization waives the fee', async () => {
+                await contracts.sentiment.actions
+                    .createtopic([
+                        sentimentContract,
+                        'testtopic',
+                        'Test topic description',
+                        String(topicFee),
+                    ])
+                    .send(sentimentContract)
+
+                const rows = await contracts.sentiment.tables.topics().getTableRows()
+                expect(rows).toHaveLength(1)
+                expect(rows[0].creator).toBe(sentimentContract)
+
+                const balanceRows = await contracts.sentiment.tables.balance().getTableRows()
+                expect(balanceRows).toHaveLength(0)
+            })
+
+            test('contract authorization waives the fee for another creator', async () => {
+                await depositTokens(alice, String(topicFee))
+
+                await contracts.sentiment.actions
+                    .createtopic([alice, 'testtopic', 'Test topic description', String(topicFee)])
+                    .send([
+                        {actor: alice, permission: 'active'},
+                        {actor: sentimentContract, permission: 'active'},
+                    ])
+
+                const rows = await contracts.sentiment.tables.topics().getTableRows()
+                expect(rows).toHaveLength(1)
+                expect(rows[0].creator).toBe(alice)
+
+                const balanceRows = await contracts.sentiment.tables.balance().getTableRows()
+                expect(balanceRows).toHaveLength(1)
+                expect(balanceRows[0].balance).toBe(String(topicFee))
+            })
+
             test('fee is forwarded to receiver', async () => {
                 await createTopic(alice, 'testtopic', 'Test topic description')
 

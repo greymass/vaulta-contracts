@@ -15,18 +15,20 @@ sentiment::createtopic(const name& creator, const name& id, const string& descri
    auto itr = topics.find(id.value);
    check(itr == topics.end(), "topic with this ID already exists");
 
-   check(payment.symbol == config.fees.token.symbol, "incorrect payment symbol");
-   check(payment.amount == config.fees.createtopic.amount, "incorrect payment amount");
+   if (!has_auth(get_self())) {
+      check(payment.symbol == config.fees.token.symbol, "incorrect payment symbol");
+      check(payment.amount == config.fees.createtopic.amount, "incorrect payment amount");
 
-   asset contract_balance = get_balance(creator, config.fees.token.symbol);
-   check(contract_balance.amount >= payment.amount, "insufficient contract balance to pay topic creation fee");
+      asset contract_balance = get_balance(creator, config.fees.token.symbol);
+      check(contract_balance.amount >= payment.amount, "insufficient contract balance to pay topic creation fee");
 
-   remove_balance(creator, payment);
+      remove_balance(creator, payment);
 
-   action(permission_level{get_self(), eosiosystem::system_contract::active_permission}, config.fees.token.contract,
-          config.fees.action,
-          std::make_tuple(get_self(), config.fees.receiver, payment, string("sentiment topic creation fee")))
-      .send();
+      action(permission_level{get_self(), eosiosystem::system_contract::active_permission}, config.fees.token.contract,
+             config.fees.action,
+             std::make_tuple(get_self(), config.fees.receiver, payment, string("sentiment topic creation fee")))
+         .send();
+   }
 
    topics.emplace(creator, [&](auto& row) {
       row.id          = id;
