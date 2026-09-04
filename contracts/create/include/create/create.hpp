@@ -37,9 +37,6 @@ public:
    [[eosio::action, eosio::read_only]] asset estimatecost();
    using estimatecost_action = eosio::action_wrapper<"estimatecost"_n, &create::estimatecost>;
 
-   [[eosio::action]] void logcreation(name account, name from, asset excess, asset ram, uint64_t timestamp);
-   using logcreation_action = eosio::action_wrapper<"logcreation"_n, &create::logcreation>;
-
    struct newaccount
    {
       name                   creator;

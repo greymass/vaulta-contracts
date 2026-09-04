@@ -72,19 +72,11 @@ void create::ontransfer(name from, name to, asset quantity, string memo)
       token::transfer_action transfer{PAYMENT_TOKEN_CONTRACT, {get_self(), "active"_n}};
       transfer.send(get_self(), account, excess, string("Excess funds from account creation"));
    }
-
-   logcreation_action logcreation{get_self(), {get_self(), "active"_n}};
-   logcreation.send(account, from, excess, cost, current_time_point().time_since_epoch().count());
 }
 
 [[eosio::action, eosio::read_only]] asset create::estimatecost()
 {
    return antelope::ram_cost_with_fee(BYTES_FOR_CREATION, PAYMENT_TOKEN);
-}
-
-[[eosio::action]] void create::logcreation(name account, name from, asset excess, asset ram, uint64_t timestamp)
-{
-   require_auth(_self);
 }
 
 } // namespace vaultacontracts

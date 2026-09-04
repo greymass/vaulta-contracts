@@ -27,7 +27,6 @@ The created account has RAM but no CPU or NET. Its first transactions need a cos
 | `transfer` notification | token sender | Entry point. Parses the memo, creates the account, buys RAM, refunds excess. |
 | `parsememo(memo)` | none (read-only) | Parses `accountname-PUBLICKEY` into a name and single-key authority. Usable as a preflight check. |
 | `estimatecost()` | none (read-only) | Returns the token cost of one creation at the market price. |
-| `logcreation(account, from, excess, ram, timestamp)` | contract | Inline log emitted per creation for indexers. |
 
 The contract stores no tables.
 
