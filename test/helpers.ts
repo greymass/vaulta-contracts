@@ -94,6 +94,8 @@ export async function resetContracts() {
     // Set base configuration for testing
     await setRegistryConfig()
     await setTokensConfig()
+
+    await contracts.registry.actions.openbalance([alice]).send(alice)
 }
 
 export function advanceTime(seconds: number) {
@@ -105,7 +107,6 @@ export async function setRegistryConfig() {
     await contracts.registry.actions.setconfig([defaultRegistryConfig]).send()
     await contracts.registry.actions.addcontract([tokensContract]).send()
     await contracts.registry.actions.enable().send()
-    await contracts.registry.actions.openbalance([alice]).send(alice)
 }
 
 export async function setTokensConfig() {
