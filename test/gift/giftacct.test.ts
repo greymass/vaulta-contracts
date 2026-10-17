@@ -195,6 +195,13 @@ describe('contract: gift - giftacct', () => {
         expect(Number(getCreator(alice).used_bytes)).toBe(1136)
     })
 
+    test('opens the first window at the first gift, not at registration', async () => {
+        advanceTime(43200)
+        await giftInTx(alice, newuser, 9864)
+        advanceTime(86000)
+        await expect(giftInTx(alice, newuser2, 1)).rejects.toThrow('daily quota exceeded')
+    })
+
     test('removing and re-registering a creator resets its used bytes', async () => {
         await giftInTx(alice, newuser, 9864)
         expect(Number(getCreator(alice).used_bytes)).toBe(10000)

@@ -7,6 +7,7 @@ void mocksystem::newaccount(name creator, name account) { require_auth(creator);
 void mocksystem::giftram(name from, name to, int64_t bytes, string memo)
 {
    require_auth(from);
+   require_recipient(from);
    check(bytes > 0, "must gift positive bytes");
    check(is_account(to), "to=" + to.to_string() + " account does not exist");
 
@@ -34,6 +35,7 @@ void mocksystem::ungiftram(name from, name to, string memo)
    auto             itr = giftedram.find(from.value);
    check(itr != giftedram.end(), from.to_string() + " does not hold any gifted RAM");
    check(itr->gifter == to, "Returning RAM to wrong gifter, should be: " + itr->gifter.to_string());
+   require_recipient(to);
 
    giftedram.erase(itr);
 }

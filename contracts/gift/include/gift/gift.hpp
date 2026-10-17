@@ -52,10 +52,6 @@ public:
    using setquota_action   = eosio::action_wrapper<"setquota"_n, &gift::setquota>;
    using giftacct_action   = eosio::action_wrapper<"giftacct"_n, &gift::giftacct>;
 
-#ifdef DEBUG
-   [[eosio::action]] void reset();
-#endif
-
 private:
    config_row get_config();
    void       require_enabled(const config_row& config) { check(config.enabled, "contract is disabled"); }

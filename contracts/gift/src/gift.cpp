@@ -60,7 +60,7 @@ void gift::addcreator(name creator, int64_t daily_quota_bytes)
       row.creator           = creator;
       row.daily_quota_bytes = daily_quota_bytes;
       row.used_bytes        = 0;
-      row.window_start      = time_point_sec(current_time_point());
+      row.window_start      = time_point_sec(0);
    });
 }
 
@@ -114,7 +114,3 @@ void gift::giftacct(name creator, name account, int64_t bytes, string memo)
 }
 
 } // namespace vaultacontracts
-
-#ifdef DEBUG
-#include "debug.cpp"
-#endif
