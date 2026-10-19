@@ -1,4 +1,4 @@
-import {Name, PermissionLevel, Serializer, Transaction} from '@wharfkit/antelope'
+import {Name, PermissionLevel, Serializer, TimePointSec, Transaction} from '@wharfkit/antelope'
 import {blockchain} from '../helpers'
 
 export const giftContract = 'ram.vaulta'
@@ -15,6 +15,7 @@ export const contracts = {
 
 export async function resetContracts() {
     await blockchain.resetTables()
+    blockchain.setTime(TimePointSec.from('2026-01-01T00:00:00'))
     blockchain.createAccounts(alice, bob, newuser, newuser2, newuser3)
 }
 

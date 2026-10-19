@@ -51,7 +51,7 @@ void gift::addcreator(name creator, int64_t daily_quota_bytes)
 {
    require_auth(get_self());
    check(is_account(creator), "creator account does not exist");
-   check(daily_quota_bytes > GIFT_ROW_OVERHEAD, "quota must exceed the per-gift row overhead");
+   require_min_quota(daily_quota_bytes);
 
    creators_table creators(get_self(), get_self().value);
    check(creators.find(creator.value) == creators.end(), "creator already registered");
@@ -61,6 +61,7 @@ void gift::addcreator(name creator, int64_t daily_quota_bytes)
       row.daily_quota_bytes = daily_quota_bytes;
       row.used_bytes        = 0;
       row.window_start      = time_point_sec(0);
+      row.suspended         = false;
    });
 }
 
@@ -75,11 +76,24 @@ void gift::rmcreator(name creator)
 void gift::setquota(name creator, int64_t daily_quota_bytes)
 {
    require_auth(get_self());
-   check(daily_quota_bytes > GIFT_ROW_OVERHEAD, "quota must exceed the per-gift row overhead");
+   require_min_quota(daily_quota_bytes);
    creators_table creators(get_self(), get_self().value);
    auto           itr = creators.require_find(creator.value, "creator not registered");
    creators.modify(itr, same_payer, [&](auto& row) { row.daily_quota_bytes = daily_quota_bytes; });
 }
+
+void gift::set_suspended(name creator, bool suspended)
+{
+   require_auth(get_self());
+   creators_table creators(get_self(), get_self().value);
+   auto           itr = creators.require_find(creator.value, "creator not registered");
+   check(itr->suspended != suspended, suspended ? "creator already suspended" : "creator not suspended");
+   creators.modify(itr, same_payer, [&](auto& row) { row.suspended = suspended; });
+}
+
+void gift::suspend(name creator) { set_suspended(creator, true); }
+
+void gift::resume(name creator) { set_suspended(creator, false); }
 
 void gift::giftacct(name creator, name account, int64_t bytes, string memo)
 {
@@ -91,6 +105,7 @@ void gift::giftacct(name creator, name account, int64_t bytes, string memo)
 
    creators_table creators(get_self(), get_self().value);
    auto           itr = creators.require_find(creator.value, "creator not registered");
+   check(!itr->suspended, "creator is suspended");
 
    auto           now          = time_point_sec(current_time_point());
    int64_t        used         = itr->used_bytes;

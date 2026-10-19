@@ -53,6 +53,28 @@ icon: https://avatars.githubusercontent.com/u/147292861?s=400&u=3b1af66e90dd851f
 
 ---
 
+<h1 class="contract">suspend</h1>
+
+---
+
+spec_version: "0.2.0"
+title: 'Suspend Creator'
+summary: 'Stop one creator\'s gifting while keeping its registration, quota and window.'
+icon: https://avatars.githubusercontent.com/u/147292861?s=400&u=3b1af66e90dd851f4d7c096ed6a2fbb4b9e190da
+
+---
+
+<h1 class="contract">resume</h1>
+
+---
+
+spec_version: "0.2.0"
+title: 'Resume Creator'
+summary: 'Lift a creator\'s suspension so it can gift again.'
+icon: https://avatars.githubusercontent.com/u/147292861?s=400&u=3b1af66e90dd851f4d7c096ed6a2fbb4b9e190da
+
+---
+
 <h1 class="contract">giftacct</h1>
 
 ---

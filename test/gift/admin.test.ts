@@ -36,6 +36,7 @@ describe('contract: gift - creator admin', () => {
         expect(row).toBeDefined()
         expect(Number(row.daily_quota_bytes)).toBe(1000000)
         expect(Number(row.used_bytes)).toBe(0)
+        expect(row.suspended).toBe(false)
     })
 
     test('addcreator rejects a nonexistent account', async () => {
@@ -52,16 +53,16 @@ describe('contract: gift - creator admin', () => {
     })
 
     test('addcreator rejects a quota that cannot fund a single gift', async () => {
-        for (const quota of [-1, 0, 1, 136]) {
+        for (const quota of [-1, 0, 1, 136, 1971]) {
             await expect(contracts.gift.actions.addcreator([alice, quota]).send()).rejects.toThrow(
-                'quota must exceed the per-gift row overhead'
+                'quota must be at least 1972 bytes'
             )
         }
     })
 
     test('addcreator accepts the smallest quota that funds a gift', async () => {
-        await contracts.gift.actions.addcreator([alice, 137]).send()
-        expect(Number(getCreator(alice).daily_quota_bytes)).toBe(137)
+        await contracts.gift.actions.addcreator([alice, 1972]).send()
+        expect(Number(getCreator(alice).daily_quota_bytes)).toBe(1972)
     })
 
     test('addcreator requires the contract authority', async () => {
@@ -78,9 +79,9 @@ describe('contract: gift - creator admin', () => {
 
     test('setquota rejects a quota that cannot fund a single gift', async () => {
         await contracts.gift.actions.addcreator([alice, 1000000]).send()
-        for (const quota of [-1, 0, 136]) {
+        for (const quota of [-1, 0, 136, 1971]) {
             await expect(contracts.gift.actions.setquota([alice, quota]).send()).rejects.toThrow(
-                'quota must exceed the per-gift row overhead'
+                'quota must be at least 1972 bytes'
             )
         }
         expect(Number(getCreator(alice).daily_quota_bytes)).toBe(1000000)
@@ -116,5 +117,82 @@ describe('contract: gift - creator admin', () => {
         await expect(contracts.gift.actions.rmcreator([alice]).send()).rejects.toThrow(
             'creator not registered'
         )
+    })
+
+    test('suspend marks the creator and keeps its quota, usage and window', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        const before = getCreator(alice)
+        await contracts.gift.actions.suspend([alice]).send()
+        const after = getCreator(alice)
+        expect(after.suspended).toBe(true)
+        expect(Number(after.daily_quota_bytes)).toBe(1000000)
+        expect(after.used_bytes).toEqual(before.used_bytes)
+        expect(after.window_start).toEqual(before.window_start)
+    })
+
+    test('resume clears the suspension', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        await contracts.gift.actions.resume([alice]).send()
+        expect(getCreator(alice).suspended).toBe(false)
+    })
+
+    test('suspend and resume work while the contract is disabled', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        expect(getCreator(alice).suspended).toBe(true)
+        await contracts.gift.actions.resume([alice]).send()
+        expect(getCreator(alice).suspended).toBe(false)
+    })
+
+    test('suspend rejects a creator already suspended', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        await expect(contracts.gift.actions.suspend([alice]).send()).rejects.toThrow(
+            'creator already suspended'
+        )
+    })
+
+    test('resume rejects a creator that is not suspended', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await expect(contracts.gift.actions.resume([alice]).send()).rejects.toThrow(
+            'creator not suspended'
+        )
+    })
+
+    test('suspend and resume reject an unknown creator', async () => {
+        await expect(contracts.gift.actions.suspend([alice]).send()).rejects.toThrow(
+            'creator not registered'
+        )
+        await expect(contracts.gift.actions.resume([alice]).send()).rejects.toThrow(
+            'creator not registered'
+        )
+    })
+
+    test('suspend and resume require the contract authority', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await expect(contracts.gift.actions.suspend([alice]).send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
+        await contracts.gift.actions.suspend([alice]).send()
+        await expect(contracts.gift.actions.resume([alice]).send(alice)).rejects.toThrow(
+            'missing required authority'
+        )
+    })
+
+    test('setquota leaves a suspension in place', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        await contracts.gift.actions.setquota([alice, 5000000]).send()
+        expect(getCreator(alice).suspended).toBe(true)
+    })
+
+    test('rmcreator removes a suspended creator and re-registration starts unsuspended', async () => {
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        await contracts.gift.actions.rmcreator([alice]).send()
+        expect(getCreator(alice)).toBeUndefined()
+        await contracts.gift.actions.addcreator([alice, 1000000]).send()
+        expect(getCreator(alice).suspended).toBe(false)
     })
 })

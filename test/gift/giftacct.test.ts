@@ -50,7 +50,7 @@ describe('contract: gift - giftacct', () => {
         ).rejects.toThrow('must be created by eosio::newaccount in the same transaction')
     })
 
-    test('rejects a gift when the newaccount creates a different account', async () => {
+    test('the transaction scan ignores a newaccount that creates a different name', async () => {
         await expect(
             sendActions(
                 packAction(contracts.system, 'newaccount', {creator: alice, account: bob}, alice),
@@ -77,7 +77,7 @@ describe('contract: gift - giftacct', () => {
             packAction(
                 contracts.gift,
                 'giftacct',
-                {creator: alice, account: newuser, bytes: 1000, memo: ''},
+                {creator: alice, account: newuser, bytes: 1600, memo: ''},
                 alice
             ),
             packAction(
@@ -87,9 +87,9 @@ describe('contract: gift - giftacct', () => {
                 alice
             )
         )
-        expect(Number(getGiftedRam(newuser).ram_bytes)).toBe(1000)
+        expect(Number(getGiftedRam(newuser).ram_bytes)).toBe(1600)
         expect(Number(getGiftedRam(newuser2).ram_bytes)).toBe(2000)
-        expect(Number(getCreator(alice).used_bytes)).toBe(3272)
+        expect(Number(getCreator(alice).used_bytes)).toBe(3872)
     })
 
     test('requires the creator authority', async () => {
@@ -151,7 +151,7 @@ describe('contract: gift - giftacct', () => {
     })
 
     test('rejects a gift that would overflow the quota check', async () => {
-        await giftInTx(alice, newuser, 1)
+        await giftInTx(alice, newuser, 1596)
         await expect(
             contracts.gift.actions
                 .giftacct([alice, newuser2, '9223372036854775807', ''])
@@ -161,8 +161,8 @@ describe('contract: gift - giftacct', () => {
 
     test('rejects a gift once the quota is lowered below the bytes already used', async () => {
         await giftInTx(alice, newuser, 4000)
-        await contracts.gift.actions.setquota([alice, 1000]).send()
-        await expect(giftInTx(alice, newuser2, 1)).rejects.toThrow('daily quota exceeded')
+        await contracts.gift.actions.setquota([alice, 1972]).send()
+        await expect(giftInTx(alice, newuser2, 1596)).rejects.toThrow('daily quota exceeded')
     })
 
     test('resets the window after 24 hours', async () => {
@@ -186,13 +186,13 @@ describe('contract: gift - giftacct', () => {
     })
 
     test('measures the window from the first gift, not the most recent one', async () => {
-        await giftInTx(alice, newuser, 1000)
+        await giftInTx(alice, newuser, 1600)
         advanceTime(86000)
-        await giftInTx(alice, newuser2, 1000)
-        expect(Number(getCreator(alice).used_bytes)).toBe(2272)
+        await giftInTx(alice, newuser2, 1600)
+        expect(Number(getCreator(alice).used_bytes)).toBe(3472)
         advanceTime(400)
-        await giftInTx(alice, newuser3, 1000)
-        expect(Number(getCreator(alice).used_bytes)).toBe(1136)
+        await giftInTx(alice, newuser3, 1600)
+        expect(Number(getCreator(alice).used_bytes)).toBe(1736)
     })
 
     test('opens the first window at the first gift, not at registration', async () => {
@@ -212,8 +212,85 @@ describe('contract: gift - giftacct', () => {
         expect(Number(getCreator(alice).used_bytes)).toBe(4136)
     })
 
+    test('rejects a gift from a suspended creator', async () => {
+        await contracts.gift.actions.suspend([alice]).send()
+        await expect(giftInTx(alice, newuser, 4000)).rejects.toThrow('creator is suspended')
+    })
+
+    test('a resumed creator gifts against the quota and window it held before suspension', async () => {
+        await giftInTx(alice, newuser, 4000)
+        await contracts.gift.actions.suspend([alice]).send()
+        advanceTime(3600)
+        await contracts.gift.actions.resume([alice]).send()
+        await giftInTx(alice, newuser2, 5728)
+        expect(Number(getCreator(alice).used_bytes)).toBe(10000)
+        await expect(giftInTx(alice, newuser3, 1596)).rejects.toThrow('daily quota exceeded')
+    })
+
+    test('a suspension blocks a single creator and leaves the others gifting', async () => {
+        await contracts.gift.actions.addcreator([bob, 10000]).send()
+        await contracts.gift.actions.suspend([alice]).send()
+        await expect(giftInTx(alice, newuser, 4000)).rejects.toThrow('creator is suspended')
+        await giftInTx(bob, newuser2, 4000)
+        expect(Number(getGiftedRam(newuser2).ram_bytes)).toBe(4000)
+    })
+
+    test('a stranger giftram before giftacct in the creating transaction reverts the whole transaction', async () => {
+        await expect(
+            sendActions(
+                packAction(
+                    contracts.system,
+                    'newaccount',
+                    {creator: alice, account: newuser},
+                    alice
+                ),
+                packAction(
+                    contracts.system,
+                    'giftram',
+                    {from: bob, to: newuser, bytes: 1596, memo: ''},
+                    bob
+                ),
+                packAction(
+                    contracts.gift,
+                    'giftacct',
+                    {creator: alice, account: newuser, bytes: 4000, memo: ''},
+                    alice
+                )
+            )
+        ).rejects.toThrow('A single RAM gifter is allowed')
+        expect(getGiftedRam(newuser)).toBeUndefined()
+        expect(Number(getCreator(alice).used_bytes)).toBe(0)
+    })
+
+    test('a stranger giftram after giftacct in the creating transaction reverts the whole transaction', async () => {
+        await expect(
+            sendActions(
+                packAction(
+                    contracts.system,
+                    'newaccount',
+                    {creator: alice, account: newuser},
+                    alice
+                ),
+                packAction(
+                    contracts.gift,
+                    'giftacct',
+                    {creator: alice, account: newuser, bytes: 4000, memo: ''},
+                    alice
+                ),
+                packAction(
+                    contracts.system,
+                    'giftram',
+                    {from: bob, to: newuser, bytes: 1596, memo: ''},
+                    bob
+                )
+            )
+        ).rejects.toThrow('A single RAM gifter is allowed')
+        expect(getGiftedRam(newuser)).toBeUndefined()
+        expect(Number(getCreator(alice).used_bytes)).toBe(0)
+    })
+
     test('single-gifter constraint propagates from the system contract', async () => {
-        await contracts.system.actions.giftram([bob, newuser, 100, '']).send(bob)
+        await contracts.system.actions.giftram([bob, newuser, 1596, '']).send(bob)
         await expect(giftInTx(alice, newuser, 4000)).rejects.toThrow(
             'A single RAM gifter is allowed'
         )
