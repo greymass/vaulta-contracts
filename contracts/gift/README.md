@@ -1,12 +1,12 @@
 # RAM Gift Contract
 
-A creator registered with this contract gifts RAM from a network endowment to each account it creates, so onboarding a user costs the creator no RAM of its own. The contract is proposed as `ram.vaulta`, a network-owned account holding a RAM endowment, in [VP-0001](https://github.com/greymass/vaulta-proposals). Gifts go through the system `giftram` action, so recipients can use the RAM but cannot sell or transfer it, and its only exit is a full return to `ram.vaulta` through `ungiftram`.
+A creator registered with this contract gifts RAM from a network endowment to each account it creates, so onboarding a user costs the creator no RAM of its own. The contract is proposed as `gift.vaulta`, a network-owned account holding a RAM endowment, in [VP-0001](https://github.com/greymass/vaulta-proposals). Gifts go through the system `giftram` action, so recipients can use the RAM but cannot sell or transfer it, and its only exit is a full return to `gift.vaulta` through `ungiftram`.
 
 ## How it works
 
 1. Producers admit a creator with a 15/21 msig carrying `addcreator(creator, daily_quota_bytes)`.
 2. The creator builds one transaction that creates an account with `eosio::newaccount` and then calls `giftacct` for that account.
-3. `giftacct` confirms the contract is enabled and the creator is registered and not suspended, finds the matching `newaccount` in the transaction, debits the creator's daily quota, and sends an inline `eosio::giftram` from `ram.vaulta` to the new account.
+3. `giftacct` confirms the contract is enabled and the creator is registered and not suspended, finds the matching `newaccount` in the transaction, debits the creator's daily quota, and sends an inline `eosio::giftram` from `gift.vaulta` to the new account.
 
 Rules a creator's transaction must satisfy:
 
@@ -16,7 +16,7 @@ Rules a creator's transaction must satisfy:
 - A single-key account uses 2,996 bytes and the system adds 1,400 free bytes once the account holds any RAM, so the smallest gift that completes `newaccount` is 1,596 bytes. Each extra key or permission level raises that figure.
 - An account holds RAM from one gifter at a time. An account funded by this contract can receive another party's `giftram` only after it returns the gift with `ungiftram`.
 
-Each `giftacct` call debits the quota by the gifted bytes plus 136 bytes, the size of the `giftedram` row `ram.vaulta` pays for each giftee. The quota is a byte count over a 24-hour window that opens on the creator's first gift and resets on the first gift at least 24 hours later. A creator can read its remaining quota from the `creators` table.
+Each `giftacct` call debits the quota by the gifted bytes plus 136 bytes, the size of the `giftedram` row `gift.vaulta` pays for each giftee. The quota is a byte count over a 24-hour window that opens on the creator's first gift and resets on the first gift at least 24 hours later. A creator can read its remaining quota from the `creators` table.
 
 ## Example transaction
 
@@ -37,7 +37,7 @@ Creating `alice.gm` with a 3,000-byte gift, signed by `gm` as both account creat
       }
     },
     {
-      "account": "ram.vaulta",
+      "account": "gift.vaulta",
       "name": "giftacct",
       "authorization": [{"actor": "gm", "permission": "active"}],
       "data": {"creator": "gm", "account": "alice.gm", "bytes": 3000, "memo": "welcome"}
@@ -53,20 +53,20 @@ This gift debits 3,136 bytes from `gm`'s daily quota.
 | Action | Auth | Description |
 |---|---|---|
 | `giftacct(creator, account, bytes, memo)` | `creator` | Gifts `bytes` of RAM to `account`, which a top-level `newaccount` in the same transaction must create. Memo up to 256 bytes. |
-| `addcreator(creator, daily_quota_bytes)` | `ram.vaulta` | Registers a creator. The quota must be at least 1,972 bytes: one 1,836-byte gift, which creates a bare account with room for one token balance of its own, plus the 136-byte overhead. |
-| `rmcreator(creator)` | `ram.vaulta` | Removes a creator. |
-| `setquota(creator, daily_quota_bytes)` | `ram.vaulta` | Changes a creator's quota without resetting its usage. The 1,972-byte floor applies. |
-| `suspend(creator)` | `ram.vaulta` | Stops one creator's gifting. Its registration, quota, usage and window stay until `resume` or `rmcreator`. VP-0001 links this action to `ram.vaulta@suspend` (8/21). |
-| `resume(creator)` | `ram.vaulta` | Lifts a creator's suspension. VP-0001 links this action to `ram.vaulta@halt` (11/21). |
-| `enable()` | `ram.vaulta` | Allows registered creators to gift. |
-| `disable()` | `ram.vaulta` | Stops all gifting and leaves the registry in place. VP-0001 links this action to `ram.vaulta@halt` (11/21). |
+| `addcreator(creator, daily_quota_bytes)` | `gift.vaulta` | Registers a creator. The quota must be at least 1,972 bytes: one 1,836-byte gift, which creates a bare account with room for one token balance of its own, plus the 136-byte overhead. |
+| `rmcreator(creator)` | `gift.vaulta` | Removes a creator. |
+| `setquota(creator, daily_quota_bytes)` | `gift.vaulta` | Changes a creator's quota without resetting its usage. The 1,972-byte floor applies. |
+| `suspend(creator)` | `gift.vaulta` | Stops one creator's gifting. Its registration, quota, usage and window stay until `resume` or `rmcreator`. VP-0001 links this action to `gift.vaulta@suspend` (8/21). |
+| `resume(creator)` | `gift.vaulta` | Lifts a creator's suspension. VP-0001 links this action to `gift.vaulta@halt` (11/21). |
+| `enable()` | `gift.vaulta` | Allows registered creators to gift. |
+| `disable()` | `gift.vaulta` | Stops all gifting and leaves the registry in place. VP-0001 links this action to `gift.vaulta@halt` (11/21). |
 
 Tables, both scoped to the contract account:
 
 - `config`: a singleton with `enabled`, which is `false` until `enable` runs.
-- `creators`: one row per creator with `creator`, `daily_quota_bytes`, `used_bytes`, `window_start` and `suspended`, in that order. A creator checks `suspended` before building a gift transaction. `suspend` and `resume` change that field in place without growing the row, so they work when `ram.vaulta` is out of RAM.
+- `creators`: one row per creator with `creator`, `daily_quota_bytes`, `used_bytes`, `window_start` and `suspended`, in that order. A creator checks `suspended` before building a gift transaction. `suspend` and `resume` change that field in place without growing the row, so they work when `gift.vaulta` is out of RAM.
 
-The contract declares no notification handlers. The system contract notifies `ram.vaulta` on every `giftram` and `ungiftram`, and with no handler those notifications have no effect, so a giftee's return always reaches the system contract's own checks.
+The contract declares no notification handlers. The system contract notifies `gift.vaulta` on every `giftram` and `ungiftram`, and with no handler those notifications have no effect, so a giftee's return always reaches the system contract's own checks.
 
 ## Building
 
@@ -84,7 +84,7 @@ Compare the sha256 of a clean local build against the on-chain code hash:
 
 ```
 shasum -a 256 contracts/gift/build/gift.wasm
-cleos -u https://vaulta.greymass.com get code ram.vaulta
+cleos -u https://vaulta.greymass.com get code gift.vaulta
 ```
 
 ## Testing
@@ -103,4 +103,4 @@ make -C ../.. test/gift
 make -C ../.. testnet/gift
 ```
 
-The testnet target builds and deploys to `GIFT_TESTNET_ACCOUNT` on Jungle 4. On mainnet, the VP-0001 enactment msigs create `ram.vaulta`, deploy this contract to it, and seed it from `admin.grants`.
+The testnet target builds and deploys to `GIFT_TESTNET_ACCOUNT` on Jungle 4. On mainnet, the VP-0001 enactment msigs create `gift.vaulta`, deploy this contract to it, and seed it from `admin.grants`.
